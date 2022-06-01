@@ -17,16 +17,6 @@ local push = require 'push'
 -- The constant speed variable for our paddles
 local SPEED = 200
 
-BUTTON_HEIGHT = 64
-
-local function newButton(text, fn)
-  return {
-    text = text,
-    fn   = fn
-  }
-end
-
-local buttons = {}
 
 --[[
     Runs when game first startup.
@@ -35,18 +25,6 @@ function love.load()
   -- Set default filter to nearest value
   love.graphics.setDefaultFilter('nearest', 'nearest')
   
-  table.insert(buttons, newButton(
-    "Start Game", function()
-      GAME_STATE = "start"
-    end
-  ))
-
-  table.insert(buttons, newButton(
-    "Exit", function()
-      love.event.quit(0)      
-    end
-  ))
-
   -- Thanks to https://www.fontspace.com/press-start-2p-font-f11591
   loadDefaultFont = love.graphics.newFont('fonts/font.ttf', 8)
   -- Score font, actually same font only size changed.
@@ -77,7 +55,6 @@ function love.load()
 end
 
 function love.update(dt)
-  if GAME_STATE == "play" then
     -- Player 1 Movement
     if love.keyboard.isDown('w') then
       player1PaddleY = math.max(0, player1PaddleY + -SPEED * dt)
@@ -96,41 +73,38 @@ function love.update(dt)
       ballX = ballX + ballDX * dt
       ballY = ballY + ballDY * dt
     end
-  elseif GAME_STATE == "menu" then
-    function love.draw()      
-      love.graphics.setFont(loadScoreFont)
-      love.graphics.printf('BingBong', 0, VIRTUAL_SCREEN_H, VIRTUAL_SCREEN_W * 3, 'center')  
+    -- function love.draw()      
+    --   love.graphics.setFont(loadScoreFont)
+    --   love.graphics.printf('BingBong', 0, VIRTUAL_SCREEN_H, VIRTUAL_SCREEN_W * 3, 'center')  
       --  Button
       -- rectangle = love.graphics.rectangle("fill", VIRTUAL_SCREEN_W * 1.2, VIRTUAL_SCREEN_H * 1.5 - 2, 250, 32)
-    end
-  end
+
 end
 
 
 function love.keypressed(key)
   -- If user pressed the escape key quit game
   if key == "escape" then
-    GAME_STATE = "menu"
+    love.event.quit()
+  end
+  if key == "space" then
+    GAME_STATE = "play"
+    if GAME_STATE == "play" then
+      ballX = VIRTUAL_SCREEN_W / 2 - 2
+      ballY = VIRTUAL_SCREEN_H / 2 - 2
+
+      ballDX = math.random(2) == 1 and 100 or -100
+      ballDY = math.random(-50, 50) * 1.5
+    end
   end
 end
 
 
 
 function love.draw()
-  local WINDOW_WIDTH = love.graphics.getWidth()
-  local WINDOW_HEIGHT = love.graphics.getHeight()
-
-  local BTN_WIDTH = WINDOW_WIDTH * (1/3)
-
-  for i, button in ipairs(buttons) do
-    if GAME_STATE == "menu" then
-      love.graphics.rectangle("fill", (WINDOW_WIDTH * 0.5) - (BTN_WIDTH * 0.5),  (WINDOW_HEIGHT * 0.5) - (BUTTON_HEIGHT * 0.5), BTN_WIDTH, BUTTON_HEIGHT)
-    end
-  end
-
   -- Begin to draw 
   push:apply('start')
-
+    
   love.graphics.clear(40/255, 45/255, 52/255, 255/255)
 
   love.graphics.setFont(loadDefaultFont)
@@ -149,7 +123,7 @@ function love.draw()
   love.graphics.rectangle('fill', VIRTUAL_SCREEN_W - 10, player2PaddleY, 3, 25)
 
   -- Center ball
-  love.graphics.rectangle('fill', VIRTUAL_SCREEN_W / 2 - 2, VIRTUAL_SCREEN_H / 2 - 2, 4, 4)
+  love.graphics.rectangle('fill', ballX, ballY, 4, 4)
 
   -- End draw
   push:apply('end')
