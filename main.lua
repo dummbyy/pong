@@ -19,7 +19,6 @@ local SPEED = 200
 
 --[[
     Runs when game first startup.
-    local loadFont = love.graphics.newFont(font, 8)
 ]]
 function love.load()
   -- Set default filter to nearest value
