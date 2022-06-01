@@ -25,9 +25,9 @@ function love.load()
   love.graphics.setDefaultFilter('nearest', 'nearest')
   
   -- Thanks to https://www.fontspace.com/press-start-2p-font-f11591
-  local loadDefaultFont = love.graphics.newFont('fonts/font.ttf', 8)
+  loadDefaultFont = love.graphics.newFont('fonts/font.ttf', 8)
   -- Score font, actually same font only size changed.
-  local loadScoreFont = love.graphics.newFont('fonts/font.ttf', 32)
+  loadScoreFont = love.graphics.newFont('fonts/font.ttf', 22)
   love.graphics.setFont(loadDefaultFont)
 
   player1PaddleY = 30
@@ -76,13 +76,20 @@ function love.draw()
 
   love.graphics.clear(40/255, 45/255, 52/255, 255/255)
 
+  love.graphics.setFont(loadDefaultFont)
   love.graphics.printf('Hello pong!', 0, 20, VIRTUAL_SCREEN_W, 'center')
 
+  love.graphics.setFont(loadScoreFont)
+  -- Render player 1 score point
+  love.graphics.print(tostring(player1ScorePoint), VIRTUAL_SCREEN_W / 2 - 50, VIRTUAL_SCREEN_H / 3)
+  -- Render player 2 score point
+  love.graphics.print(tostring(player2ScorePoint), VIRTUAL_SCREEN_W / 2 + 30, VIRTUAL_SCREEN_H / 3)
+
   -- Top left paddle
-  love.graphics.rectangle('fill', 10, 30, 5, 20)
+  love.graphics.rectangle('fill', 10, player1PaddleY, 3, 25)
 
   -- Bottom right paddle
-  love.graphics.rectangle('fill', VIRTUAL_SCREEN_W - 10, VIRTUAL_SCREEN_H - 50, 2, 20)
+  love.graphics.rectangle('fill', VIRTUAL_SCREEN_W - 10, player2PaddleY, 3, 25)
 
   -- Center ball
   love.graphics.rectangle('fill', VIRTUAL_SCREEN_W / 2 - 2, VIRTUAL_SCREEN_H / 2 - 2, 4, 4)
