@@ -1,3 +1,10 @@
+-- https://github.com/ulydev/push
+push    = require 'push'
+Class   = require 'lib.class'
+require 'lib.Paddle'
+require 'lib.Ball'
+require 'lib.StateManager'
+require 'lib.TextManager'
 
 --[[
     Constant variables for screen size.
@@ -11,11 +18,9 @@ SCREEN_HEIGHT  = 720
 VIRTUAL_SCREEN_W = 432
 VIRTUAL_SCREEN_H = 243
 
--- https://github.com/ulydev/push
-local push = require 'push'
 
 -- The constant speed variable for our paddles
-local SPEED = 200
+SPEED = 200
 
 
 --[[
@@ -24,61 +29,67 @@ local SPEED = 200
 function love.load()
   -- Set default filter to nearest value
   love.graphics.setDefaultFilter('nearest', 'nearest')
+  math.randomseed(os.time())
   
   -- Thanks to https://www.fontspace.com/press-start-2p-font-f11591
-  loadDefaultFont = love.graphics.newFont('fonts/font.ttf', 8)
+  gameTextManager = TextManager()
+  gameTextManager:ImportFont('fonts/font.ttf', 8)
+  
   -- Score font, actually same font only size changed.
-  loadScoreFont = love.graphics.newFont('fonts/font.ttf', 22)
-  love.graphics.setFont(loadDefaultFont)
+  scoreTextManager1 = TextManager()
+  scoreTextManager2 = TextManager()
 
-  player1PaddleY = 30
-  player2PaddleY = VIRTUAL_SCREEN_H - 50
+  stx1 = scoreTextManager1:ImportFont('fonts/font.ttf', 22)
+  stx2 = scoreTextManager2:ImportFont('fonts/font.ttf', 22)
+
+  gameTextManager:LoadFont()
 
   player1ScorePoint = 0
   player2ScorePoint = 0
 
-  ballX = VIRTUAL_SCREEN_W / 2 - 2
-  ballY = VIRTUAL_SCREEN_H / 2 - 2
-
-  ballDX = math.random(2) == 1 and 100 or -100
-  ballDY = math.random(-50, 50)
-
-  -- Set game state to start
-  GAME_STATE = "menu"
-
+  
   push:setupScreen(VIRTUAL_SCREEN_W, VIRTUAL_SCREEN_H, SCREEN_WIDTH, SCREEN_HEIGHT, {
-      fullscreen= false,
-      resiable= false,
-      vsync= true,
-      title="Hello"
+    fullscreen= false,
+    resiable= false,
+    vsync= true,
+    title="Hello"
   })
+  
+  StateManager = GameState()
+  player1 = Paddle(10, 30, 5, 20)
+  player2 = Paddle(VIRTUAL_SCREEN_W - 10, VIRTUAL_SCREEN_H - 30, 5, 20)
+  
+  -- place a ball in the middle of the screen
+  ball = Ball(VIRTUAL_SCREEN_W / 2 - 2, VIRTUAL_SCREEN_H / 2 - 2, 4, 4)
+  -- Set game state to start
+  StateManager:setState('menu')
 end
 
 function love.update(dt)
-    -- Player 1 Movement
-    if love.keyboard.isDown('w') then
-      player1PaddleY = math.max(0, player1PaddleY + -SPEED * dt)
-    elseif love.keyboard.isDown('s') then
-      player1PaddleY = math.min(VIRTUAL_SCREEN_H - 20, player1PaddleY + SPEED * dt)
-    end
+  -- Player 1 Movement
+  if love.keyboard.isDown('w') then
+    player1.dy = -SPEED
+  elseif love.keyboard.isDown('s') then
+    player1.dy = SPEED
+  else
+    player1.dy = 0
+  end
     
-    -- Player 2 Movement
-    if love.keyboard.isDown('up') then
-      player2PaddleY = math.max(0, player2PaddleY + -SPEED * dt)
-    elseif love.keyboard.isDown('down') then
-      player2PaddleY = math.min(VIRTUAL_SCREEN_H - 20, player2PaddleY + SPEED * dt)
-    end
+  -- Player 2 Movement
+  if love.keyboard.isDown('up') then
+    player2.dy = -SPEED
+  elseif love.keyboard.isDown('down') then
+    player2.dy = SPEED
+  else
+    player2.dy = 0
+  end
     
-    if GAME_STATE == "play" then
-      ballX = ballX + ballDX * dt
-      ballY = ballY + ballDY * dt
-    end
-    -- function love.draw()      
-    --   love.graphics.setFont(loadScoreFont)
-    --   love.graphics.printf('BingBong', 0, VIRTUAL_SCREEN_H, VIRTUAL_SCREEN_W * 3, 'center')  
-      --  Button
-      -- rectangle = love.graphics.rectangle("fill", VIRTUAL_SCREEN_W * 1.2, VIRTUAL_SCREEN_H * 1.5 - 2, 250, 32)
+  if StateManager:getState() == "play" then
+    ball:Update(dt)
+  end
 
+  player1:Update(dt)
+  player2:Update(dt)
 end
 
 
@@ -88,14 +99,7 @@ function love.keypressed(key)
     love.event.quit()
   end
   if key == "space" then
-    GAME_STATE = "play"
-    if GAME_STATE == "play" then
-      ballX = VIRTUAL_SCREEN_W / 2 - 2
-      ballY = VIRTUAL_SCREEN_H / 2 - 2
-
-      ballDX = math.random(2) == 1 and 100 or -100
-      ballDY = math.random(-50, 50) * 1.5
-    end
+    StateManager:setState('play')
   end
 end
 
@@ -107,23 +111,19 @@ function love.draw()
     
   love.graphics.clear(40/255, 45/255, 52/255, 255/255)
 
-  love.graphics.setFont(loadDefaultFont)
-  love.graphics.printf('Hello pong!', 0, 20, VIRTUAL_SCREEN_W, 'center')
+  gameTextManager:LoadFont()
+  gameTextManager:Printf('Hello pong!', 0, 20, VIRTUAL_SCREEN_W, 'center')
 
-  love.graphics.setFont(loadScoreFont)
+  scoreTextManager1:LoadFont()
+  scoreTextManager2:LoadFont()
   -- Render player 1 score point
-  love.graphics.print(tostring(player1ScorePoint), VIRTUAL_SCREEN_W / 2 - 50, VIRTUAL_SCREEN_H / 3)
+  scoreTextManager1:Print(tostring(player1ScorePoint), VIRTUAL_SCREEN_W / 2 - 50, VIRTUAL_SCREEN_H / 3)
   -- Render player 2 score point
-  love.graphics.print(tostring(player2ScorePoint), VIRTUAL_SCREEN_W / 2 + 30, VIRTUAL_SCREEN_H / 3)
+  scoreTextManager2:Print(tostring(player2ScorePoint), VIRTUAL_SCREEN_W / 2 + 30, VIRTUAL_SCREEN_H / 3)
 
-  -- Top left paddle
-  love.graphics.rectangle('fill', 10, player1PaddleY, 3, 25)
-
-  -- Bottom right paddle
-  love.graphics.rectangle('fill', VIRTUAL_SCREEN_W - 10, player2PaddleY, 3, 25)
-
-  -- Center ball
-  love.graphics.rectangle('fill', ballX, ballY, 4, 4)
+  player1:Draw()
+  player2:Draw()
+  ball:Draw()
 
   -- End draw
   push:apply('end')
