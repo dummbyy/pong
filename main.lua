@@ -1,5 +1,6 @@
 -- https://github.com/ulydev/push
 push    = require 'push'
+-- https://github.com/vrld/hump/blob/master/class.lua
 Class   = require 'lib.class'
 require 'lib.Paddle'
 require 'lib.Ball'
